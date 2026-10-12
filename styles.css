@@ -20,17 +20,50 @@ html, body {
 }
 
 #stage {
+  position: relative;
   flex: 1;
   width: 100%;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none; /* we handle pinch / pan ourselves */
+}
+
+#zoom-pan {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0;
+  transform: translate(0px, 0px) scale(1);
+  transform-origin: 0 0;
 }
 
 #book-wrapper {
   transform: scaleX(-1); /* mirror the whole book: turns the LTR flip engine into an RTL page-turn */
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55));
+}
+
+#book-wrapper.zoomed {
+  pointer-events: none; /* while zoomed, drags pan instead of flipping pages */
+}
+
+.pill-btn {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 30, 34, 0.85);
+  color: #e7edf0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  cursor: pointer;
+  z-index: 20;
+}
+
+.pill-btn.hidden {
+  display: none;
 }
 
 #book {
@@ -90,6 +123,145 @@ html, body {
   text-align: center;
   direction: ltr;
   letter-spacing: 0.5px;
+}
+
+.controls-sep {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---- slide-up panels (quick jump / search) ---- */
+
+.panel {
+  position: absolute;
+  bottom: 78px;
+  right: 50%;
+  transform: translate(50%, 0);
+  width: min(92vw, 420px);
+  max-height: 60vh;
+  background: rgba(22, 33, 38, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 14px 16px 18px;
+  color: #e7edf0;
+  z-index: 30;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.panel.hidden {
+  display: none;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.panel-close {
+  background: transparent;
+  border: none;
+  color: #e7edf0;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.panel-close:hover {
+  opacity: 1;
+}
+
+#jump-slider {
+  width: 100%;
+  direction: ltr;
+}
+
+.jump-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+#jump-input {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #e7edf0;
+  padding: 8px 10px;
+  font-size: 14px;
+  text-align: center;
+}
+
+#jump-go {
+  background: #4b7f94;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#jump-go:hover {
+  background: #5a93aa;
+}
+
+#search-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  color: #e7edf0;
+  padding: 9px 12px;
+  font-size: 14px;
+}
+
+#search-status {
+  font-size: 12px;
+  color: #9fb0b6;
+}
+
+#search-results {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.search-result {
+  text-align: right;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.search-result:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.search-result .result-page {
+  color: #8fd0e8;
+  font-weight: 600;
+  margin-inline-start: 6px;
+}
+
+.search-result mark {
+  background: #ffd866;
+  color: #1a1a1a;
+  border-radius: 2px;
+  padding: 0 1px;
 }
 
 #loading {

@@ -9,14 +9,43 @@
 <body>
 <div id="app">
   <div id="stage">
-    <div id="book-wrapper">
-      <div id="book"></div>
+    <div id="zoom-pan">
+      <div id="book-wrapper">
+        <div id="book"></div>
+      </div>
     </div>
+    <button id="zoom-reset" class="pill-btn hidden" title="איפוס זום">✕ איפוס זום</button>
   </div>
+
   <div id="controls">
     <button id="next-btn" class="nav-btn" title="הדף הבא">‹</button>
     <span id="page-indicator">1 / 246</span>
     <button id="prev-btn" class="nav-btn" title="הדף הקודם">›</button>
+    <span class="controls-sep"></span>
+    <button id="jump-toggle" class="nav-btn" title="דילוג מהיר">☰</button>
+    <button id="search-toggle" class="nav-btn" title="חיפוש בספר">🔍</button>
+  </div>
+
+  <div id="jump-panel" class="panel hidden">
+    <div class="panel-header">
+      <span>דילוג מהיר</span>
+      <button class="panel-close" data-close="jump-panel">✕</button>
+    </div>
+    <input type="range" id="jump-slider" min="1" max="246" value="1" />
+    <div class="jump-input-row">
+      <input type="number" id="jump-input" min="1" max="246" placeholder="מספר עמוד" />
+      <button id="jump-go">עבור</button>
+    </div>
+  </div>
+
+  <div id="search-panel" class="panel hidden">
+    <div class="panel-header">
+      <span>חיפוש בספר</span>
+      <button class="panel-close" data-close="search-panel">✕</button>
+    </div>
+    <input type="text" id="search-input" placeholder="הקלד מילה, כמה מילים או משפט..." />
+    <div id="search-status"></div>
+    <div id="search-results"></div>
   </div>
 </div>
 
