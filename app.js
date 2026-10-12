@@ -8,7 +8,6 @@
   const stageEl = document.getElementById("stage");
   const zoomPanEl = document.getElementById("zoom-pan");
   const bookWrapperEl = document.getElementById("book-wrapper");
-  const zoomResetBtn = document.getElementById("zoom-reset");
 
   const jumpToggle = document.getElementById("jump-toggle");
   const jumpPanel = document.getElementById("jump-panel");
@@ -53,6 +52,11 @@
     maxShadowOpacity: 0.5,
     usePortrait: true,
     mobileScrollSupport: false,
+    // We fully own touch/mouse gestures ourselves (RTL-aware swipe,
+    // pinch-zoom, pan). The library's built-in handlers attach to `window`
+    // and would otherwise intercept every touch move in parallel with our
+    // own logic, causing conflicts (e.g. the book glitching out during pinch).
+    useMouseEvents: false,
   });
 
   let loaded = false;
@@ -237,9 +241,7 @@
 
   function applyZoom() {
     zoomPanEl.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-    const zoomed = scale > 1.02;
-    bookWrapperEl.classList.toggle("zoomed", zoomed);
-    zoomResetBtn.classList.toggle("hidden", !zoomed);
+    bookWrapperEl.classList.toggle("zoomed", scale > 1.02);
   }
 
   function resetZoom() {
@@ -249,8 +251,6 @@
     applyZoom();
   }
 
-  zoomResetBtn.addEventListener("click", resetZoom);
-
   function zoomAtPoint(clientX, clientY, newScaleRaw) {
     const rect = stageEl.getBoundingClientRect();
     const localX = clientX - rect.left;
@@ -258,10 +258,15 @@
     const newScale = clampScale(newScaleRaw);
     const contentX = (localX - panX) / scale;
     const contentY = (localY - panY) / scale;
-    panX = localX - contentX * newScale;
-    panY = localY - contentY * newScale;
     scale = newScale;
-    clampPan();
+    if (scale <= MIN_SCALE + 0.001) {
+      panX = 0;
+      panY = 0;
+    } else {
+      panX = localX - contentX * newScale;
+      panY = localY - contentY * newScale;
+      clampPan();
+    }
     applyZoom();
   }
 
@@ -318,10 +323,15 @@
         const contentY = (localY0 - pinch.startPan.y) / pinch.startScale;
         const localX1 = newMid.x - rect.left;
         const localY1 = newMid.y - rect.top;
-        panX = localX1 - contentX * newScale;
-        panY = localY1 - contentY * newScale;
         scale = newScale;
-        clampPan();
+        if (scale <= MIN_SCALE + 0.001) {
+          panX = 0;
+          panY = 0;
+        } else {
+          panX = localX1 - contentX * newScale;
+          panY = localY1 - contentY * newScale;
+          clampPan();
+        }
         applyZoom();
       } else if (singleDrag && e.touches.length === 1) {
         e.preventDefault();
@@ -336,21 +346,53 @@
     { passive: false }
   );
 
+  // Thresholds for interpreting a finished single-finger gesture as a swipe
+  // (page turn / fast navigation) rather than a tap.
+  const SWIPE_MIN_DIST = 40;
+  const FAST_NAV_MIN_DIST = 70;
+  const SWIPE_MAX_TIME = 600;
+
   stageEl.addEventListener("touchend", (e) => {
     if (e.touches.length < 2) pinch = null;
     if (e.touches.length === 0) {
+      const wasPanning = !!singleDrag;
       singleDrag = null;
       if (tapInfo) {
-        const now = Date.now();
-        if (now - tapInfo.time < 300 && now - lastTapTime < 300) {
-          if (scale > 1.02) {
-            resetZoom();
+        const t = e.changedTouches[0];
+        const dx = t.clientX - tapInfo.x;
+        const dy = t.clientY - tapInfo.y;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
+        const dt = Date.now() - tapInfo.time;
+        const isZoomed = scale > 1.02;
+
+        if (!wasPanning && !isZoomed && dt < SWIPE_MAX_TIME && (absDx > SWIPE_MIN_DIST || absDy > FAST_NAV_MIN_DIST)) {
+          if (absDx > absDy) {
+            // Horizontal swipe = page turn. Book reads right-to-left, so a
+            // swipe toward the left (finger moving right -> left) advances
+            // forward through the book, and a swipe toward the right goes back.
+            if (dx < 0) pageFlip.flipNext();
+            else pageFlip.flipPrev();
           } else {
-            zoomAtPoint(tapInfo.x, tapInfo.y, 2.2);
+            // Long vertical swipe = fast multi-page navigation.
+            const jump = Math.min(50, Math.max(8, Math.round(absDy / 6)));
+            const current = pageFlip.getCurrentPageIndex();
+            if (dy < 0) goToPage(current + jump);
+            else goToPage(current - jump);
           }
           lastTapTime = 0;
-        } else {
-          lastTapTime = now;
+        } else if (!wasPanning) {
+          const now = Date.now();
+          if (dt < 300 && now - lastTapTime < 300) {
+            if (isZoomed) {
+              resetZoom();
+            } else {
+              zoomAtPoint(tapInfo.x, tapInfo.y, 2.2);
+            }
+            lastTapTime = 0;
+          } else {
+            lastTapTime = now;
+          }
         }
       }
       tapInfo = null;
