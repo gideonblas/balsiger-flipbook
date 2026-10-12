@@ -347,9 +347,8 @@
   );
 
   // Thresholds for interpreting a finished single-finger gesture as a swipe
-  // (page turn / fast navigation) rather than a tap.
+  // (page turn) rather than a tap.
   const SWIPE_MIN_DIST = 40;
-  const FAST_NAV_MIN_DIST = 70;
   const SWIPE_MAX_TIME = 600;
 
   stageEl.addEventListener("touchend", (e) => {
@@ -366,20 +365,11 @@
         const dt = Date.now() - tapInfo.time;
         const isZoomed = scale > 1.02;
 
-        if (!wasPanning && !isZoomed && dt < SWIPE_MAX_TIME && (absDx > SWIPE_MIN_DIST || absDy > FAST_NAV_MIN_DIST)) {
-          if (absDx > absDy) {
-            // Horizontal swipe = page turn. Book reads right-to-left, so a
-            // swipe toward the left (finger moving right -> left) advances
-            // forward through the book, and a swipe toward the right goes back.
-            if (dx < 0) pageFlip.flipNext();
-            else pageFlip.flipPrev();
-          } else {
-            // Long vertical swipe = fast multi-page navigation.
-            const jump = Math.min(50, Math.max(8, Math.round(absDy / 6)));
-            const current = pageFlip.getCurrentPageIndex();
-            if (dy < 0) goToPage(current + jump);
-            else goToPage(current - jump);
-          }
+        if (!wasPanning && !isZoomed && dt < SWIPE_MAX_TIME && absDx > SWIPE_MIN_DIST && absDx > absDy) {
+          // Horizontal swipe = page turn (inverted from the previous mapping
+          // per user feedback on a real device).
+          if (dx < 0) pageFlip.flipPrev();
+          else pageFlip.flipNext();
           lastTapTime = 0;
         } else if (!wasPanning) {
           const now = Date.now();
