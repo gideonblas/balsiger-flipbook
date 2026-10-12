@@ -164,7 +164,9 @@ html, body {
 
 #jump-slider {
   width: 100%;
-  direction: ltr;
+  /* RTL so the slider starts at page 1 on the right and advances leftward,
+     matching the book's own right-to-left reading direction. */
+  direction: rtl;
   height: 32px;
   touch-action: pan-x;
 }

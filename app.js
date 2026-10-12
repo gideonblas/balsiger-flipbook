@@ -226,17 +226,18 @@
 
   function clampPan() {
     const rect = stageEl.getBoundingClientRect();
-    const baseW = bookWrapperEl.offsetWidth || rect.width;
-    const baseH = bookWrapperEl.offsetHeight || rect.height;
-    const scaledW = baseW * scale;
-    const scaledH = baseH * scale;
-    const slack = 0.9;
-    const maxPanX = scaledW * slack;
-    const minPanX = rect.width - scaledW * slack;
-    const maxPanY = scaledH * slack;
-    const minPanY = rect.height - scaledH * slack;
-    panX = Math.min(maxPanX, Math.max(minPanX, panX));
-    panY = Math.min(maxPanY, Math.max(minPanY, panY));
+    // #zoom-pan (the element we actually translate/scale) fills the stage
+    // exactly (inset: 0) before any transform is applied, so the stage's own
+    // size IS the pre-scale size of the transformed box - not the size of the
+    // book-wrapper inside it (which is often smaller due to letterboxing).
+    // Using the book-wrapper's size here previously made the clamp bounds
+    // far too tight, forcing pan back toward the top-left corner on zoom.
+    const scaledW = rect.width * scale;
+    const scaledH = rect.height * scale;
+    const maxPanX = Math.max(0, scaledW - rect.width);
+    const maxPanY = Math.max(0, scaledH - rect.height);
+    panX = Math.min(0, Math.max(-maxPanX, panX));
+    panY = Math.min(0, Math.max(-maxPanY, panY));
   }
 
   function applyZoom() {
