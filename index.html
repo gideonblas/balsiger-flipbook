@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>סיפור חיי ומשפחתי - יעקב בלסבלג</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div id="book-wrapper">
+      <div id="book"></div>
+    </div>
+  </div>
+  <div id="controls">
+    <button id="next-btn" class="nav-btn" title="הדף הבא">‹</button>
+    <span id="page-indicator">1 / 246</span>
+    <button id="prev-btn" class="nav-btn" title="הדף הקודם">›</button>
+  </div>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div>טוען את הספר...</div>
+</div>
+
+<script src="vendor/page-flip.browser.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
